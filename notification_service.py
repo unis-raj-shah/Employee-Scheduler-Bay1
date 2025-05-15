@@ -497,7 +497,7 @@ def send_forecast_email(forecast_data: Dict[str, Any], required_staff: Dict[str,
     try:
         # Create email message
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"Forecast for Tomorrow for Orgain"
+        msg["Subject"] = f"Forecast for Tomorrow for BAY 1"
         msg["From"] = EMAIL_CONFIG["sender_email"]
         msg["To"] = ", ".join(EMAIL_CONFIG["default_recipients"])
         
@@ -698,7 +698,7 @@ def send_short_staffed_notification(shortages: Dict[str, int], date: str) -> boo
 
     try:
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"Short Staffed Alert for {date}"
+        msg["Subject"] = f"Short Staffed Alert for {date}, BAY 1"
         msg["From"] = EMAIL_CONFIG["sender_email"]
         msg["To"] = ", ".join(EMAIL_CONFIG["default_recipients"])
 
