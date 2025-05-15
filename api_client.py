@@ -7,6 +7,9 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple
 from config import WISE_API_HEADERS, DEFAULT_CUSTOMER_ID
 
+# Split the comma-separated IDs into a list
+CUSTOMER_IDS = [cid.strip() for cid in DEFAULT_CUSTOMER_ID.split(',')]
+
 def get_tomorrow_date_range(days_ahead: int = 1) -> Tuple[datetime, datetime, datetime]:
     """
     Get tomorrow's date range for API requests.
@@ -52,6 +55,7 @@ def get_priority_report(sheet_name: Optional[str] = None) -> Optional[Dict[str, 
             if sheet_name == 'all':
                 try:
                     return pd.read_excel(excel_file, sheet_name=['RG Outbound', 'Inbound'])
+                    
                 except ValueError:
                     print("Standard sheet names not found, trying alternative names...")
                     outbound_sheet = next((s for s in available_sheets if 'outbound' in s.lower()), None)
@@ -91,8 +95,8 @@ def get_inbound_receipts() -> List[Dict[str, Any]]:
     payload = {
         "appointmentTimeFrom": tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S'),
         "appointmentTimeTo": tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S'),
-        "customerIds": [DEFAULT_CUSTOMER_ID],
-        "paging": {"pageNo": 1, "limit": 100},
+        "customerIds": CUSTOMER_IDS,  # Already supports multiple IDs
+        "paging": {"pageNo": 1, "limit": 1000},
         "statuses": ["Appointment Made", "In Yard"]
     }
 
@@ -119,44 +123,49 @@ def get_equipment_details() -> List[Dict[str, Any]]:
         List of equipment details dictionaries with receipt IDs
     """
     url = "https://wise.logisticsteam.com/v2/valleyview/bam/wms-app/csr/equipmentDetail"
+    all_equipment_details = []
     
-    payload = {
-        "customerId": DEFAULT_CUSTOMER_ID,
-        "type": "Container",
-        "equipmentStatus": "Full",
-        "statuses": ["Loaded", "Full to Offload"],
-        "paging": {"pageNo": 1, "limit": 100}
-    }
-    
-    try:
-        print("Fetching equipment details...")
-        response = requests.post(url, headers=WISE_API_HEADERS, json=payload)
-        response.raise_for_status()
+    for customer_id in CUSTOMER_IDS:
+        payload = {
+            "customerId": customer_id.strip(),
+            "type": "Container",
+            "equipmentStatus": "Full",
+            "statuses": ["Loaded", "Full to Offload"],
+            "paging": {"pageNo": 1, "limit": 1000}
+        }
         
-        data = response.json()
-        
-        if not isinstance(data, list):
-            print(f"Unexpected response format from equipment details API. Expected list, got {type(data)}")
-            return []
+        try:
+            print(f"Fetching equipment details for customer {customer_id}...")
+            response = requests.post(url, headers=WISE_API_HEADERS, json=payload)
+            response.raise_for_status()
             
-        # Extract equipment details with receipt IDs
-        equipment_details = []
-        for equipment in data:
-            if isinstance(equipment, dict):
-                receipt_ids = equipment.get('receiptIds', [])
-                if receipt_ids:
-                    equipment_details.append({
-                        'equipmentNo': equipment.get('equipmentNo', ''),
-                        'receiptIds': receipt_ids,
-                        'status': equipment.get('status', ''),
-                        'location': equipment.get('currentLocation', '')
-                    })
-                    
-        print(f"Processed {len(equipment_details)} equipment details with receipt IDs")
-        return equipment_details
+            data = response.json()
+            
+            if not isinstance(data, list):
+                print(f"Unexpected response format from equipment details API for {customer_id}. Expected list, got {type(data)}")
+                continue
+                
+            # Extract equipment details with receipt IDs
+            for equipment in data:
+                if isinstance(equipment, dict):
+                    receipt_ids = equipment.get('receiptIds', [])
+                    if receipt_ids:
+                        all_equipment_details.append({
+                            'equipmentNo': equipment.get('equipmentNo', ''),
+                            'receiptIds': receipt_ids,
+                            'status': equipment.get('status', ''),
+                            'location': equipment.get('currentLocation', ''),
+                            'customerId': customer_id  # Add customer ID for reference
+                        })
+                
+        except Exception as e:
+            print(f"Error in fetching equipment details for {customer_id}: {str(e)}")
     
-    except Exception as e:
-        print(f"Error in fetching equipment details: {str(e)}")
+    print(f"Processed {len(all_equipment_details)} equipment details with receipt IDs across all customers")
+    # go through all equipment details and print the equipmentNo and the receiptIds and customerId
+    # for equipment in all_equipment_details:
+    #     print(f"Equipment No: {equipment['equipmentNo']}, Receipt IDs: {equipment['receiptIds']}, Customer ID: {equipment['customerId']}\n")
+    return all_equipment_details
 
 def get_outbound_orders():
     """
@@ -167,52 +176,58 @@ def get_outbound_orders():
     """
     tomorrow_start, tomorrow_end, _ = get_tomorrow_date_range()
     url = "https://wise.logisticsteam.com/v2/valleyview/report-center/outbound/order-status-report/search-by-paging"
+    all_processed_orders = []
     
-    payload = {
-        "statuses": ["Imported", "Open", "Planning", "Planned", "Committed"],
-        "customerId": DEFAULT_CUSTOMER_ID,
-        "orderTypes": ["Regular Order"],
-        "appointmentTimeFrom": tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S'),
-        "appointmentTimeTo": tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S'),
-        "paging": {"pageNo": 1, "limit": 100}
-    }
+    for customer_id in CUSTOMER_IDS:
+        payload = {
+            "statuses": ["Imported", "Open", "Planning", "Planned", "Committed"],
+            "customerId": customer_id.strip(),
+            "orderTypes": ["Regular Order"],
+            "appointmentTimeFrom": tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S'),
+            "appointmentTimeTo": tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S'),
+            "paging": {"pageNo": 1, "limit": 1000}
+        }
+        
+        try:
+            print(f"Fetching outbound orders for customer {customer_id}...")
+            response = requests.post(url, headers=WISE_API_HEADERS, json=payload)
+            response.raise_for_status()
+            
+            data = response.json()
+            orders = data.get('results', {}).get('data', [])
+            
+            # Process and standardize order data
+            for order in orders:
+                try:
+                    pallet_qty = float(order.get('Pallet QTY', 0)) or 0
+                    order_qty = float(order.get('Order QTY', 0)) or 0
+                    picking_type = order.get('Picking Type', '')
+                except (ValueError, TypeError):
+                    pallet_qty = order_qty = 0
+                    picking_type = ''
+                    
+                all_processed_orders.append({
+                    'order_no': order.get('Order No.'),
+                    'status': order.get('Order Status', 'Unknown'),
+                    'customer': customer_id,  # Use the actual customer ID we're querying with
+                    'ship_to': order.get('Ship to', 'Unknown'),
+                    'state': order.get('State', 'Unknown'),
+                    'reference_no': order.get('Reference Number', ''),
+                    'target_completion_date': order.get('Target Completion Date', ''),
+                    'pallet_qty': pallet_qty,
+                    'order_qty': order_qty,
+                    'Picking Type': picking_type
+                })
+        
+        except Exception as e:
+            print(f"Error in outbound status report API for {customer_id}: {str(e)}")
     
-    try:
-        response = requests.post(url, headers=WISE_API_HEADERS, json=payload)
-        response.raise_for_status()
-        
-        data = response.json()
-        orders = data.get('results', {}).get('data', [])
-        
-        # Process and standardize order data
-        processed_orders = []
-        for order in orders:
-            try:
-                pallet_qty = float(order.get('Pallet QTY', 0)) or 0
-                order_qty = float(order.get('Order QTY', 0)) or 0
-                picking_type = order.get('Picking Type', '')
-            except (ValueError, TypeError):
-                pallet_qty = order_qty = 0
-                picking_type = ''
-                
-            processed_orders.append({
-                'order_no': order.get('Order No.'),
-                'status': order.get('Order Status', 'Unknown'),
-                'customer': order.get('Customer ID', 'Unknown'),
-                'ship_to': order.get('Ship to', 'Unknown'),
-                'state': order.get('State', 'Unknown'),
-                'reference_no': order.get('Reference Number', ''),
-                'target_completion_date': order.get('Target Completion Date', ''),
-                'pallet_qty': pallet_qty,
-                'order_qty': order_qty,
-                'Picking Type': picking_type
-            })
-        
-        return processed_orders
-    
-    except Exception as e:
-        print(f"Error in outbound status report API: {str(e)}")
-        return []
+    print(f"Retrieved {len(all_processed_orders)} outbound orders across all customers")
+    # go through all processed orders and print the order_no and the customer and reference_no
+    # for order in all_processed_orders:
+    #     print(f"Order No: {order['order_no']}, Customer: {order['customer']}, Reference No: {order['reference_no']}\n")
+    return all_processed_orders
+
 
 def get_picked_outbound_orders():
     """
@@ -223,46 +238,56 @@ def get_picked_outbound_orders():
     """
     tomorrow_start, tomorrow_end, _ = get_tomorrow_date_range()
     url = "https://wise.logisticsteam.com/v2/valleyview/report-center/outbound/order-status-report/search-by-paging"
+    all_processed_picked_orders = []
     
-    payload = {
-        "statuses": ["Picked", "Packed"],
-        "customerId": DEFAULT_CUSTOMER_ID,
-        "appointmentTimeFrom": tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S'),
-        "appointmentTimeTo": tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S'),
-        "paging": {"pageNo": 1, "limit": 100}
-    }
+    for customer_id in CUSTOMER_IDS:
+        payload = {
+            "statuses": ["Picked", "Packed"],
+            "customerId": customer_id.strip(),
+            "appointmentTimeFrom": tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S'),
+            "appointmentTimeTo": tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S'),
+            "paging": {"pageNo": 1, "limit": 1000}
+        }
+        
+        try:
+            print(f"Fetching picked outbound orders for customer {customer_id}...")
+            response = requests.post(url, headers=WISE_API_HEADERS, json=payload)
+            response.raise_for_status()
+            
+            data = response.json()
+            orders = data.get('results', {}).get('data', [])
+            
+            # Process and standardize picked order data
+            for order in orders:
+                try:
+                    pallet_qty = float(order.get('Pallet QTY', 0)) or 0
+                    order_qty = float(order.get('Order QTY', 0)) or 0
+                except (ValueError, TypeError):
+                    pallet_qty = order_qty = 0
+                    
+                all_processed_picked_orders.append({
+                    'order_no': order.get('Order No.'),
+                    'status': order.get('Order Status', 'Unknown'),
+                    'customer': customer_id,  # Use the actual customer ID we're querying with
+                    'ship_to': order.get('Ship to', 'Unknown'),
+                    'state': order.get('State', 'Unknown'),
+                    'reference_no': order.get('Reference Number', ''),
+                    'target_completion_date': order.get('Target Completion Date', ''),
+                    'pallet_qty': pallet_qty,
+                    'order_qty': order_qty
+                })
+        
+        except Exception as e:
+            print(f"Error in picked outbound status report API for {customer_id}: {str(e)}")
     
-    try:
-        print("Fetching picked outbound orders...")
-        response = requests.post(url, headers=WISE_API_HEADERS, json=payload)
-        response.raise_for_status()
-        
-        data = response.json()
-        orders = data.get('results', {}).get('data', [])
-        
-        # Process and standardize picked order data
-        processed_picked_orders = []
-        for order in orders:
-            try:
-                pallet_qty = float(order.get('Pallet QTY', 0)) or 0
-                order_qty = float(order.get('Order QTY', 0)) or 0
-            except (ValueError, TypeError):
-                pallet_qty = order_qty = 0
-                
-            processed_picked_orders.append({
-                'order_no': order.get('Order No.'),
-                'status': order.get('Order Status', 'Unknown'),
-                'customer': order.get('Customer ID', 'Unknown'),
-                'ship_to': order.get('Ship to', 'Unknown'),
-                'state': order.get('State', 'Unknown'),
-                'reference_no': order.get('Reference Number', ''),
-                'target_completion_date': order.get('Target Completion Date', ''),
-                'pallet_qty': pallet_qty,
-                'order_qty': order_qty
-            })
-        
-        return processed_picked_orders
-    
-    except Exception as e:
-        print(f"Error in picked outbound status report API: {str(e)}")
-        return []
+    print(f"Retrieved {len(all_processed_picked_orders)} picked outbound orders across all customers")
+    # go through all processed picked orders and print the order_no and the customer and reference_no
+    # for order in all_processed_picked_orders:
+    #     print(f"Order No: {order['order_no']}, Customer: {order['customer']}, Reference No: {order['reference_no']}\n")
+    return all_processed_picked_orders
+
+get_picked_outbound_orders()
+get_outbound_orders()
+get_equipment_details()
+get_inbound_receipts()
+get_priority_report()
