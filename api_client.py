@@ -10,7 +10,7 @@ from config import WISE_API_HEADERS, DEFAULT_CUSTOMER_ID
 # Split the comma-separated IDs into a list
 CUSTOMER_IDS = [cid.strip() for cid in DEFAULT_CUSTOMER_ID.split(',')]
 
-def get_tomorrow_date_range(days_ahead: int = 0) -> Tuple[datetime, datetime, datetime]:
+def get_tomorrow_date_range(days_ahead: int = 4) -> Tuple[datetime, datetime, datetime]:
     """
     Get tomorrow's date range for API requests.
     
@@ -183,12 +183,16 @@ def get_outbound_orders():
             "statuses": ["Imported", "Open", "Planning", "Planned", "Committed"],
             "customerId": customer_id.strip(),
             "orderTypes": ["Regular Order"],
-            # "appointmentTimeFrom": tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S'),
-            # "appointmentTimeTo": tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S'),
-            "targetCompletionDateFrom": tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S'),
-            "targetCompletionDateTo": tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S'),
             "paging": {"pageNo": 1, "limit": 1000}
         }
+        
+        # Use appointment time for MAMMA CHIA, target completion for others
+        if customer_id.strip() == "ORG-685351":
+            payload["appointmentTimeFrom"] = tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S')
+            payload["appointmentTimeTo"] = tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            payload["targetCompletionDateFrom"] = tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S')
+            payload["targetCompletionDateTo"] = tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S')
         
         try:
             print(f"Fetching outbound orders for customer {customer_id}...")
@@ -246,13 +250,17 @@ def get_picked_outbound_orders():
         payload = {
             "statuses": ["Picked", "Packed", "Staged"],
             "customerId": customer_id.strip(),
-            # "appointmentTimeFrom": tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S'),
-            # "appointmentTimeTo": tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S'),
-            "targetCompletionDateFrom": tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S'),
-            "targetCompletionDateTo": tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S'),
             "orderTypes": ["Regular Order"],
             "paging": {"pageNo": 1, "limit": 1000}
         }
+        
+        # Use appointment time for MAMMA CHIA, target completion for others
+        if customer_id.strip() == "ORG-685351":
+            payload["appointmentTimeFrom"] = tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S')
+            payload["appointmentTimeTo"] = tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            payload["targetCompletionDateFrom"] = tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S')
+            payload["targetCompletionDateTo"] = tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S')
         
         try:
             print(f"Fetching picked outbound orders for customer {customer_id}...")
