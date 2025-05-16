@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 
 # API Settings
 WISE_API_HEADERS = {
-    "authorization": os.getenv("WISE_API_KEY", "1d85743c-cd88-4c11-9886-622aac0350c3"), #1d85743c-cd88-4c11-9886-622aac0350c3 raj-6d95c4d1-a408-4cc4-b1e1-04f3485ec78a
+    "authorization": os.getenv("WISE_API_KEY", "7f49d959-828f-4afa-9bbf-4fa723ae9c9f"), #1d85743c-cd88-4c11-9886-622aac0350c3 raj-6d95c4d1-a408-4cc4-b1e1-04f3485ec78a
     "wise-company-id": os.getenv("WISE_COMPANY_ID", "ORG-1"),
     "wise-facility-id": os.getenv("WISE_FACILITY_ID", "F1"),
     "content-type": "application/json;charset=UTF-8",
@@ -18,20 +18,41 @@ EMAIL_CONFIG = {
     "smtp_port": int(os.getenv("SMTP_PORT", "587")),
     "sender_email": os.getenv("SENDER_EMAIL", "raj.shah@unisco.com"),
     "sender_password": os.getenv("SENDER_PASSWORD", "T%058811678539oy"),
-    "default_recipients": os.getenv("DEFAULT_RECIPIENTS", "raj.shah@unisco.com, diego.delgado@unisco.com,mark.tuttle@unisco.com,john.diaz@unisco.com,carlos.morales@unisco.com,steven.balbas@unisco.com,steven.garcia@unisco.com").split(',')
+    "default_recipients": os.getenv("DEFAULT_RECIPIENTS", "raj.shah@unisco.com, diego.delgado@unisco.com").split(',') # mark.tuttle@unisco.com,john.diaz@unisco.com,carlos.morales@unisco.com,steven.balbas@unisco.com,steven.garcia@unisco.com
 }
 
 # Database Settings
 DB_PATH = os.getenv("DB_PATH", "./chroma_db_orgain")
 
-#ORG-655338 orgain id, ORG-601372 Overseas, ORG-536926 KingsH, ORG-629731 Rise and Shine, ORG-625900 Zen,
-#ORG-685351 Mamma Chia, ORG-714892 Natural Deca, ORG-582188 Preferred Brands Int, ORG-646997 Ritual Beverage,
-#ORG-616507 Roar Beverages, ORG-55783 Sans Wine Spirits, ORG-723580 Uptime Energy
+# we will use the following orgs
+# ORG-629731 Rise and Shine, 
+# ORG-625900 Zen
+# ORG-625904 Recovery Sports
+# ORG-625907 WATER PLUS
+# ORG-625905 MUSE
+# ORG-55783 Sans Wine Spirits
+# ORG-647815 MELOGRANO
+# ORG-674362 Gimme health Foods
+# ORG-540512 SOUTHERN GLAZERs
+# ORG-434827 DIVINELY NECTAR
+# ORG-538772 PASSION TREE
+# ORG-582188 PREFERRED BRANDS INTERNATIONAL
+# ORG-646997 Ritual Beverage
+# ORG-723580 Uptime Energy
+# ORG-672896 KACE TEA
+# ORG-616507 Roar Beverages
+# ORG-539166 AMERICAN VINES
+# ORG-685351 MAMMA CHIA
+# ORG-714892 NATURAL DECADANCE
+
+
 # Customer Settings
 DEFAULT_CUSTOMER_ID = os.getenv("DEFAULT_CUSTOMER_ID", 
-                               "ORG-714892, ORG-655338, ORG-601372, "
-                               "ORG-536926, ORG-629731, ORG-625900, ORG-685351, ORG-582188, "
-                               "ORG-646997, ORG-616507, ORG-55783, ORG-723580")
+                               "ORG-629731, ORG-625900, ORG-625904, ORG-625907, "
+                               "ORG-625905, ORG-55783, ORG-647815, ORG-674362, "
+                               "ORG-540512, ORG-434827, ORG-538772, ORG-582188, "
+                               "ORG-646997, ORG-723580, ORG-672896, ORG-616507, "
+                               "ORG-539166, ORG-685351, ORG-714892")
                                                                     
 
 # Role mappings for consistent matching
