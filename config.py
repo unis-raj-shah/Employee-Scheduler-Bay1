@@ -17,7 +17,7 @@ EMAIL_CONFIG = {
     "smtp_port": int(os.getenv("SMTP_PORT", "587")),
     "sender_email": os.getenv("SENDER_EMAIL", "raj.shah@unisco.com"),
     "sender_password": os.getenv("SENDER_PASSWORD", "T%058811678539oy"),
-    "default_recipients": os.getenv("DEFAULT_RECIPIENTS", "raj.shah@unisco.com, diego.delgado@unisco.com,mark.tuttle@unisco.com,john.diaz@unisco.com,carlos.morales@unisco.com,steven.balbas@unisco.com,steven.garcia@unisco.com").split(',')
+    "default_recipients": os.getenv("DEFAULT_RECIPIENTS", "raj.shah@unisco.com, diego.delgado@unisco.com,mark.tuttle@unisco.com,john.diaz@unisco.com,carlos.morales@unisco.com,steven.balbas@unisco.com,steven.garcia@unisco.com, humberto.flores@unisco.com").split(',')
 }
 
 # Database Settings
