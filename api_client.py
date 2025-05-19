@@ -10,7 +10,7 @@ from config import WISE_API_HEADERS, DEFAULT_CUSTOMER_ID
 # Split the comma-separated IDs into a list
 CUSTOMER_IDS = [cid.strip() for cid in DEFAULT_CUSTOMER_ID.split(',')]
 
-def get_tomorrow_date_range(days_ahead: int = 4) -> Tuple[datetime, datetime, datetime]:
+def get_tomorrow_date_range(days_ahead: int = 1) -> Tuple[datetime, datetime, datetime]:
     """
     Get tomorrow's date range for API requests.
     
@@ -263,6 +263,7 @@ def get_picked_outbound_orders():
             payload["targetCompletionDateTo"] = tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S')
         
         try:
+            print(tomorrow_start.strftime('%Y-%m-%dT%H:%M:%S'), tomorrow_end.strftime('%Y-%m-%dT%H:%M:%S'))
             print(f"Fetching picked outbound orders for customer {customer_id}...")
             response = requests.post(url, headers=WISE_API_HEADERS, json=payload)
             response.raise_for_status()
@@ -295,12 +296,12 @@ def get_picked_outbound_orders():
     
     print(f"Retrieved {len(all_processed_picked_orders)} picked outbound orders across all customers")
     # go through all processed picked orders and print the order_no and the customer and reference_no
-    # for order in all_processed_picked_orders:
-    #     print(f"Order No: {order['order_no']}, Customer: {order['customer']}, Reference No: {order['reference_no']}\n")
+    for order in all_processed_picked_orders:
+        print(f"Order No: {order['order_no']}, Customer: {order['customer']}, Reference No: {order['reference_no']}\n")
     return all_processed_picked_orders
 
 get_picked_outbound_orders()
 get_outbound_orders()
-get_equipment_details()
-get_inbound_receipts()
-get_priority_report()
+# get_equipment_details()
+# get_inbound_receipts()
+# get_priority_report()
