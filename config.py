@@ -5,8 +5,7 @@ from typing import List, Dict, Any
 
 # API Settings
 WISE_API_HEADERS = {
-    "authorization": os.getenv("WISE_API_KEY", "1d85743c-cd88-4c11-9886-622aac0350c3"), #1d85743c-cd88-4c11-9886-622aac0350c3 raj-6d95c4d1-a408-4cc4-b1e1-04f3485ec78a
-    "wise-company-id": os.getenv("WISE_COMPANY_ID", "ORG-1"),
+    "authorization": os.getenv("WISE_API_KEY", "c9724c40-4d72-4baf-9cf9-4942388e2391"),
     "wise-facility-id": os.getenv("WISE_FACILITY_ID", "F1"),
     "content-type": "application/json;charset=UTF-8",
     "user": os.getenv("WISE_USER", "rshah")
@@ -44,7 +43,7 @@ ROLE_MAPPINGS = {
 }
 
 # Efficiency factor for workforce calculations (as a decimal)
-WORKFORCE_EFFICIENCY = 0.8
+WORKFORCE_EFFICIENCY = 0.85
 
 # Work hours per shift
 HOURS_PER_SHIFT = 7.5
