@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 
 # API Settings
 WISE_API_HEADERS = {
-    "authorization": os.getenv("WISE_API_KEY", "fab469d7-9ac3-42e6-a588-9956c7a6000b"),
+    "authorization": os.getenv("WISE_API_KEY", "85a00ea2-d8fc-4e8d-be3f-2b30f5ccee62"),
     "wise-facility-id": os.getenv("WISE_FACILITY_ID", "F1"),
     "content-type": "application/json;charset=UTF-8",
     "user": os.getenv("WISE_USER", "rshah")
@@ -17,7 +17,7 @@ EMAIL_CONFIG = {
     "smtp_port": int(os.getenv("SMTP_PORT", "587")),
     "sender_email": os.getenv("SENDER_EMAIL", "raj.shah@unisco.com"),
     "sender_password": os.getenv("SENDER_PASSWORD", "T%058811678539oy"),
-    "default_recipients": os.getenv("DEFAULT_RECIPIENTS", "raj.shah@unisco.com, diego.delgado@unisco.com").split(',') # mark.tuttle@unisco.com,john.diaz@unisco.com,carlos.morales@unisco.com,steven.balbas@unisco.com,steven.garcia@unisco.com
+    "default_recipients": os.getenv("DEFAULT_RECIPIENTS", "raj.shah@unisco.com, diego.delgado@unisco.com, mark.tuttle@unisco.com,john.diaz@unisco.com,steven.balbas@unisco.com, ricardo.tapia@unisco.com").split(',')
 }
 
 # Database Settings

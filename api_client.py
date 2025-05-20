@@ -296,8 +296,8 @@ def get_picked_outbound_orders():
     
     print(f"Retrieved {len(all_processed_picked_orders)} picked outbound orders across all customers")
     # go through all processed picked orders and print the order_no and the customer and reference_no
-    for order in all_processed_picked_orders:
-        print(f"Order No: {order['order_no']}, Customer: {order['customer']}, Reference No: {order['reference_no']}\n")
+    # for order in all_processed_picked_orders:
+    #     print(f"Order No: {order['order_no']}, Customer: {order['customer']}, Reference No: {order['reference_no']}\n")
     return all_processed_picked_orders
 
 get_picked_outbound_orders()
