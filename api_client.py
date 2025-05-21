@@ -300,8 +300,8 @@ def get_picked_outbound_orders():
     #     print(f"Order No: {order['order_no']}, Customer: {order['customer']}, Reference No: {order['reference_no']}\n")
     return all_processed_picked_orders
 
-get_picked_outbound_orders()
-get_outbound_orders()
+# get_picked_outbound_orders()
+# get_outbound_orders()
 # get_equipment_details()
 # get_inbound_receipts()
 # get_priority_report()
