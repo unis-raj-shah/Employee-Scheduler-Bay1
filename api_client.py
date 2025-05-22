@@ -10,7 +10,7 @@ from config import WISE_API_HEADERS, DEFAULT_CUSTOMER_ID
 # Split the comma-separated IDs into a list
 CUSTOMER_IDS = [cid.strip() for cid in DEFAULT_CUSTOMER_ID.split(',')]
 
-def get_tomorrow_date_range(days_ahead: int = 1) -> Tuple[datetime, datetime, datetime]:
+def get_tomorrow_date_range(days_ahead: int = 5) -> Tuple[datetime, datetime, datetime]:
     """
     Get tomorrow's date range for API requests.
     
@@ -21,7 +21,8 @@ def get_tomorrow_date_range(days_ahead: int = 1) -> Tuple[datetime, datetime, da
         Tuple of (start_datetime, end_datetime, target_date)
     """
     target_date = datetime.now() + timedelta(days=days_ahead)
-    start_datetime = target_date.replace(hour=0, minute=0, second=0)
+    tomorrow_date = datetime.now() + timedelta(days=1)
+    start_datetime = tomorrow_date.replace(hour=0, minute=0, second=0)
     end_datetime = target_date.replace(hour=23, minute=59, second=59)
     return start_datetime, end_datetime, target_date
 
