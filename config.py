@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 
 # API Settings
 WISE_API_HEADERS = {
-    "authorization": os.getenv("WISE_API_KEY", "d8d28371-5ef6-44f2-bd06-dbf9bc8b3721"),
+    "authorization": os.getenv("WISE_API_KEY", "429a7cfb-776a-4f5e-97d7-7cc33ae0776e"),
     "wise-facility-id": os.getenv("WISE_FACILITY_ID", "F1"),
     "content-type": "application/json;charset=UTF-8",
     "user": os.getenv("WISE_USER", "rshah")
