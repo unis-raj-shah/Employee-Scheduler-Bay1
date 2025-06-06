@@ -6,8 +6,26 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, Any
 import schedule_service
-from notification_service import send_short_staffed_notification
-from database import retrieve_employees
+
+def calculate_total_staff(required_roles: Dict[str, Any]) -> int:
+    """
+    Calculate the total number of staff required across all operations.
+    
+    Args:
+        required_roles: Dictionary containing required roles for all operations
+        
+    Returns:
+        Total number of staff required
+    """
+    total = 0
+    for operation, roles in required_roles.items():
+        if isinstance(roles, dict):
+            # Sum all role counts for this operation
+            total += sum(roles.values())
+        else:
+            # Single number for this operation
+            total += roles
+    return total
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -27,16 +45,23 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    """Root endpoint with API information."""
-    return {
-        "name": "Warehouse Scheduler API",
-        "version": "1.0.0",
-        "endpoints": {
-            "/api/schedule": "Get warehouse scheduling data",
-            "/docs": "API documentation (Swagger UI)",
-            "/redoc": "API documentation (ReDoc)"
+    try:
+        # Run the scheduler
+        schedule_result = schedule_service.run_scheduler()
+        
+        if not schedule_result:
+            return {"error": "Failed to generate schedule"}
+            
+        # schedule_result is a dictionary with 'tomorrow' and 'day_after' keys
+        return {
+            "message": "Schedule generated successfully",
+            "tomorrow": schedule_result['tomorrow'],
+            "day_after": schedule_result['day_after']
         }
-    }
+        
+    except Exception as e:
+        print(f"Error in root endpoint: {str(e)}")
+        return {"error": str(e)}
 
 @app.get("/api/schedule")
 async def get_schedule() -> Dict[str, Any]:
@@ -78,38 +103,48 @@ if __name__ == "__main__":
         print("\n=== Warehouse Shift Scheduler ===")
         result = schedule_service.run_scheduler()
         if result:
-            print(f"\nScheduling for: {result['date']} ({result['day_name']})")
+            # Process tomorrow's data
+            tomorrow_data = result['tomorrow']
+            print(f"\nScheduling for Tomorrow ({tomorrow_data['date']} - {tomorrow_data['day_name']})")
             print("\nForecast:")
-            print(f"- Shipping Pallets: {result['forecast_data']['shipping_pallets']:.1f}")
-            print(f"- Incoming Pallets: {result['forecast_data']['incoming_pallets']:.1f}")
-            print(f"- Cases to Pick: {result['forecast_data']['cases_to_pick']:.1f}")
+            print(f"- Shipping Pallets: {tomorrow_data['forecast_data']['shipping_pallets']:.1f}")
+            print(f"- Incoming Pallets: {tomorrow_data['forecast_data']['incoming_pallets']:.1f}")
+            print(f"- Cases to Pick: {tomorrow_data['forecast_data']['cases_to_pick']:.1f}")
+            print(f"- Staged Pallets: {tomorrow_data['forecast_data']['staged_pallets']:.1f}")
             
             print("\nRequired Staff:")
-            for role, count in result['required_roles'].items():
-                print(f"- {role}: {count}")
-
-            # Calculate shortages based on available employees in the database
-            required_roles = result['required_roles']
-            matched_employees = retrieve_employees(required_roles)
-
-            shortages = {}
-            for role, required_count in required_roles.items():
-                if isinstance(required_count, dict):
-                    # Handle nested role structure
-                    for sub_role, sub_count in required_count.items():
-                        available_count = len(matched_employees.get(f"{role}_{sub_role}", []))
-                        if available_count < sub_count:
-                            shortages[f"{role}_{sub_role}"] = sub_count - available_count
+            for operation, roles in tomorrow_data['required_roles'].items():
+                if isinstance(roles, dict):
+                    print(f"- {operation.title()}:")
+                    for role, count in roles.items():
+                        print(f"  - {role.replace('_', ' ').title()}: {count}")
                 else:
-                    # Handle flat role structure
-                    available_count = len(matched_employees.get(role, []))
-                    if available_count < required_count:
-                        shortages[role] = required_count - available_count
+                    print(f"- {operation.replace('_', ' ').title()}: {roles}")
+            
+            # Calculate and display total staff for tomorrow
+            total_tomorrow_staff = calculate_total_staff(tomorrow_data['required_roles'])
+            print(f"\n*** TOTAL STAFF NEEDED: {total_tomorrow_staff} ***")
 
-            if shortages:
-                print("\nShortages (based on available employees):")
-                for role, shortage in shortages.items():
-                    print(f"- {role}: {shortage}")
-                send_short_staffed_notification(shortages, date=result['date'])
+            # Process day after tomorrow's data
+            day_after_data = result['day_after']
+            print(f"\nScheduling for Day After Tomorrow ({day_after_data['date']} - {day_after_data['day_name']})")
+            print("\nForecast:")
+            print(f"- Shipping Pallets: {day_after_data['forecast_data']['shipping_pallets']:.1f}")
+            print(f"- Incoming Pallets: {day_after_data['forecast_data']['incoming_pallets']:.1f}")
+            print(f"- Cases to Pick: {day_after_data['forecast_data']['cases_to_pick']:.1f}")
+            print(f"- Staged Pallets: {day_after_data['forecast_data']['staged_pallets']:.1f}")
+            
+            print("\nRequired Staff:")
+            for operation, roles in day_after_data['required_roles'].items():
+                if isinstance(roles, dict):
+                    print(f"- {operation.title()}:")
+                    for role, count in roles.items():
+                        print(f"  - {role.replace('_', ' ').title()}: {count}")
+                else:
+                    print(f"- {operation.replace('_', ' ').title()}: {roles}")
+            
+            # Calculate and display total staff for day after tomorrow
+            total_day_after_staff = calculate_total_staff(day_after_data['required_roles'])
+            print(f"\n*** TOTAL STAFF NEEDED: {total_day_after_staff} ***")
         else:
-            print("\nNo scheduling data available for tomorrow")
+            print("\nNo scheduling data available for the next two days")
