@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 
 # API Settings
 WISE_API_HEADERS = {
-    "authorization": os.getenv("WISE_API_KEY", "e5bd6f44-f448-42d8-b557-593957d88cf6"),
+    "authorization": os.getenv("WISE_API_KEY", "2da52584-c64c-4b86-8ab4-059d8171ed86"),
     "wise-facility-id": os.getenv("WISE_FACILITY_ID", "F1"),
     "content-type": "application/json;charset=UTF-8",
     "user": os.getenv("WISE_USER", "rshah")
@@ -17,7 +17,7 @@ EMAIL_CONFIG = {
     "smtp_port": int(os.getenv("SMTP_PORT", "587")),
     "sender_email": os.getenv("SENDER_EMAIL", "raj.shah@unisco.com"),
     "sender_password": os.getenv("SENDER_PASSWORD", "Raj@UNIS123"),
-    "default_recipients": os.getenv("DEFAULT_RECIPIENTS", "raj.shah@unisco.com, diego.delgado@unisco.com, mark.tuttle@unisco.com,john.diaz@unisco.com,steven.balbas@unisco.com, ricardo.tapia@unisco.com").split(',')
+    "default_recipients": os.getenv("DEFAULT_RECIPIENTS", "raj.shah@unisco.com, diego.delgado@unisco.com").split(',') # mark.tuttle@unisco.com,john.diaz@unisco.com,steven.balbas@unisco.com, ricardo.tapia@unisco.com").split(',')
 }
 
 # Database Settings
@@ -45,7 +45,8 @@ DB_PATH = os.getenv("DB_PATH", "./chroma_db_orgain")
 # ORG-714892 NATURAL DECADANCE
 
 
-# Customer Settings
+# Customer Settings############### 
+
 DEFAULT_CUSTOMER_ID = os.getenv("DEFAULT_CUSTOMER_ID", 
                                "ORG-629731, ORG-625900, ORG-625904, ORG-625907, "
                                "ORG-625905, ORG-55783, ORG-647815, ORG-674362, "
